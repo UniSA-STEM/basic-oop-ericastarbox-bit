@@ -1,9 +1,9 @@
 """
 File: Asset.py
-Description: <A brief description of this Python module.>
-Author: <full name>
-ID: <student_id>
-Username: <username>
+Description: Defines the core assets required for the Basic Programming Assignment
+Author: Erica Box
+ID: 110468687
+Username: boxey001
 This is my own work as defined by the University's Academic Misconduct Policy.
 """
 
