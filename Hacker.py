@@ -8,7 +8,7 @@ This is my own work as defined by the University's Academic Misconduct Policy.
 """
 
 from Rig import Rig
-from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset
+from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset, HardwarePatch
 
 
 class Hacker:
@@ -32,14 +32,14 @@ class Hacker:
                 return item
         return None
 
-    def find_security_chip(self):
-        """Search for SecurityChip type in the inventory or rig storage."""
+    def find_item_type(self, item_class: type):
+        """Search for BaseAsset instance type in the inventory or rig storage."""
         for item in self.inventory:
-            if isinstance(item, SecurityChip):
+            if isinstance(item, item_class):
                 return item, "inventory"
         if self.rig:
             for item in self.rig.storage:
-                if isinstance(item, SecurityChip):
+                if isinstance(item, item_class):
                     return item, "rig"
         return None
 
@@ -75,9 +75,9 @@ class Hacker:
 
     def acquire_rig(self):
         """Remove a CryptoToken and assign a Rig."""
-        if self.find_and_remove_from_inventory(CryptoToken):
+        if self.find_and_remove_from_inventory(CryptoToken):  # Uses helper function to find and remove CryptoToken
             self.rig = Rig("Hail Mary")
-            print("Rig acquired")
+            print("Rig acquired.")
         else:
             print("No CryptoToken available to acquire rig.")
 
@@ -101,7 +101,7 @@ class Hacker:
         self.chip = None
         self.chip_location = None
 
-        chip_info = self.find_security_chip()
+        chip_info = self.find_item_type(SecurityChip)
         if not chip_info:
             print("Security chip needed to encrypt assets.")
             return
@@ -131,10 +131,7 @@ class Hacker:
             print(f"Cannot decrypt {target.name}: target rig is not broken/exposed.")
             return
 
-        self.chip = None
-        self.chip_location = None
-
-        chip_info = self.find_security_chip()
+        chip_info = self.find_item_type(SecurityChip)
         if not chip_info:
             print("Security Chip needed to decrypt target rig assets.")
             return
@@ -148,3 +145,25 @@ class Hacker:
             print("Target assets have been decrypted successfully.")
         else:
             print("Assets are already decrypted. SecurityChip not consumed.")
+
+    def upgrade_rig(self):
+        """ Upgrade the Hacker's rig """
+
+        # Check that Hacker has a rig
+        if not self.rig:
+            print("Hacker does not have a rig to upgrade.")
+            return
+
+        # Search for Hardware Patch
+        hardware_patch_info = self.find_item_type(HardwarePatch)
+        if not hardware_patch_info:
+            print("Hardware Patch needed to upgrade rig.")
+            return
+
+        patch, location = hardware_patch_info
+        if location == "inventory":
+            self.inventory.remove(patch)
+        else:
+            self.rig.storage.remove(patch)
+
+        print(f"{self.rig.name} has been upgraded.")
