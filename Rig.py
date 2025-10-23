@@ -19,3 +19,4 @@ class Rig:
                         DataSpike("DataSpike", "Used to encrypt and decrypt assets."),
                         RemovableDrive("RemovableDrive", "Used in battles.")]
         self.upgrade_level = 0
+        self.rig_storage_encrypted = False
