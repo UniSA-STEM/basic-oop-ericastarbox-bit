@@ -57,6 +57,7 @@ def encrypt_assets(self):
                 chip_location = "rig"
                 break
 
+    # If no chip was found, end method and advise that a Security Chip is needed to encrypt assets.
     if chip is None:
         print("Security chip needed to encrypt assets.")
         return
