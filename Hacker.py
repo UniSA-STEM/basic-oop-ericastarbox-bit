@@ -71,6 +71,13 @@ class Hacker:
             self.rig.storage.remove(self.chip)
             print("Security chip removed from rig storage.")
 
+    def find_and_remove_from_rig(self, item: BaseAsset, source: Rig):
+        """Find and remove the item from the target Rig."""
+        if item in source.storage:
+            source.storage.remove(item)
+        else:
+            print(f"{item.name} not found in {source.name} storage.")
+
     # ---------- Core Methods ----------
 
     def acquire_rig(self):
@@ -167,3 +174,20 @@ class Hacker:
             self.rig.storage.remove(patch)
 
         print(f"{self.rig.name} has been upgraded.")
+
+    # Store assets from target rig.
+    def store_assets(self, item: BaseAsset, source: Rig, destination):
+        """
+        Move an asset from the source rig's storage to the hackers inventory or the hacker's rig's storage.
+        destination (list): The target storage location can be either self.inventory or self.rig.storage.
+        """
+        if destination == self.inventory:
+            self.inventory.append(item)
+            self.find_and_remove_from_rig(item, source)
+            print(f"{item.name} moved to inventory.")
+        elif self.rig and destination == self.rig.storage:
+            self.rig.storage.append(item)
+            self.find_and_remove_from_rig(item, source)
+            print(f"{item.name} moved to rig storage.")
+        else:
+            print("Invalid destination for storing asset.")
