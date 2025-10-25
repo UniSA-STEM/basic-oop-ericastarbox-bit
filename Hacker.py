@@ -6,9 +6,8 @@ ID: 110468687
 Username: boxey001
 This is my own work as defined by the University's Academic Misconduct Policy.
 """
-
-from Rig import Rig
 from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset, HardwarePatch
+from Rig import Rig
 
 
 class Hacker:
@@ -18,22 +17,25 @@ class Hacker:
         self.rig = None
         self.trace_level = 0
         self.chip_location = None
-        self.chip = None
-        self.inventory_encrypted = False
-        self.rig_storage_encrypted = False
 
     # ---------- Helper Methods ----------
 
     def find_and_remove_from_inventory(self, item_type):
-        """Find and remove the first instance of the specified type in the Hacker's inventory."""
+        """
+        Find and remove the first instance of the specified type in the Hacker's inventory.
+        """
         for item in self.inventory:
             if isinstance(item, item_type):
                 self.inventory.remove(item)
                 return item
         return None
 
-    def find_item_type(self, item_class: type):
-        """Search for BaseAsset instance type in the inventory or rig storage."""
+    def find_item_type(self, item_class: BaseAsset) -> tuple[BaseAsset, str] | None:
+        """
+        Search for instance of item_class - a subclass of BaseAsset.
+        First checks inventory and if not found, then rig.
+        Returns a tuple of (item, location) or None if not found.
+        """
         for item in self.inventory:
             if isinstance(item, item_class):
                 return item, "inventory"
@@ -42,15 +44,6 @@ class Hacker:
                 if isinstance(item, item_class):
                     return item, "rig"
         return None
-
-    def encrypt_items(self, items):
-        """Encrypts all unencrypted items in a list. Returns True if any were encrypted."""
-        encrypted_any = False
-        for item in items:
-            if not item.encrypted:
-                item.encrypted = True
-                encrypted_any = True
-        return encrypted_any
 
     def decrypt_items(self, items):
         """Decrypt all encrypted items in a list. Return True if any were decrypted."""
@@ -80,6 +73,12 @@ class Hacker:
             print(f"{items} not found in {source.name} storage.")
             return False
 
+    def remove_item(self, item: BaseAsset, location):
+        for asset in location:
+            if item == asset:
+                location.remove(asset)
+                print(f"{item.name} removed from {location}.")
+
     # ---------- Core Methods ----------
 
     def acquire_rig(self):
@@ -103,33 +102,32 @@ class Hacker:
         else:
             print("No DataSpike available.")
 
-    def encrypt_assets(self):
-        """Encrypts assets using a SecurityChip, if available."""
-        self.inventory_encrypted = False
-        self.rig_storage_encrypted = False
-        self.chip = None
-        self.chip_location = None
+    def encrypt_assets(self, location):
+        """
+        Encrypts all assets in defined location.
+        Location can be self.inventory or self.rig.storage.
+        Encrypting assets requires one Security Chip
+        """
 
-        chip_info = self.find_item_type(SecurityChip)
-        if not chip_info:
-            print("Security chip needed to encrypt assets.")
+        chip_found = self.find_item_type(SecurityChip)
+        if not chip_found:
+            print(f"Must have security chip to encrypt assets.")
             return
 
-        self.chip, self.chip_location = chip_info
+        chip, chip_location = chip_found
+        any_encrypted = False
+        location_str = "inventory" if location == self.inventory else "rig storage"
 
-        self.inventory_encrypted = self.encrypt_items(self.inventory)
-        self.rig_storage_encrypted = self.encrypt_items(self.rig.storage) if self.rig else False
+        for asset in location:
+            if not asset.encrypted:
+                asset.encrypted = True
+                any_encrypted = True
 
-        if self.inventory_encrypted or self.rig_storage_encrypted:
-            if self.inventory_encrypted and self.rig_storage_encrypted:
-                print("Assets from inventory and rig's storage have been encrypted.")
-            elif self.inventory_encrypted:
-                print("Assets from inventory have been encrypted.")
-            elif self.rig_storage_encrypted:
-                print("Assets from rig's storage have been encrypted.")
-            self.remove_security_chip()
+        if any_encrypted:
+            print(f"Assets in {location_str} have been encrypted.")
+            self.remove_item(chip, self.inventory if chip_location == "inventory" else self.rig.storage)
         else:
-            print("No assets have been encrypted.")
+            print(f"Assets in {location_str} are already encrypted.")
 
     def decrypt_target_rig(self, target: Rig):
         """ Decrypt assets in a target Rig, if it is broken and a SecurityChip is available. """
@@ -245,9 +243,9 @@ class Hacker:
 
     def __str__(self):
         return (
-            "---------------------\n"
+            "=====================\n"
             f"Hacker Name: {self.name}\n"
             f"{f'Rig Name: {self.rig.name}' if self.rig else 'Hacker has no rig.'}\n"
             f"Trace Level: {self.trace_level}\n"
-            "---------------------\n"
+            "=====================\n"
         )
