@@ -193,3 +193,41 @@ class Hacker:
             if was_removed:
                 destination.append(item)
                 print(f"{item.name} moved to {('inventory' if destination == self.inventory else 'rig storage')}.")
+
+    def retrieve_assets(self, item: BaseAsset, to_inventory: bool = False):
+        """
+        Move assets between the hacker's inventory and rig's storage.
+        If to_inventory is True, assets are moved from storage to inventory.
+        If to_inventory is False, assets are moved from inventory to storage.
+        """
+        # First, check that the hacker has a rig.
+        if not self.rig:
+            print("Hacker does not have a rig.")
+            return
+
+        # Move asset from inventory to storage
+        if to_inventory:
+            for asset in self.rig.storage:
+                if item == asset:
+                    if asset.encrypted:
+                        print("Cannot store encrypted asset.")
+                        return
+                    self.rig.storage.remove(asset)
+                    self.inventory.append(asset)
+                    print(f"{item.name} retrieved from storage and placed in inventory.")
+                    return
+            print(f"{item.name} not found in rig storage.")
+            return
+
+        # Move asset from storage to inventory
+        else:
+            for asset in self.inventory:
+                if item == asset:
+                    if asset.encrypted:
+                        print("Cannot retrieve encrypted asset.")
+                        return
+                    self.inventory.remove(asset)
+                    self.rig.storage.append(asset)
+                    print(f"{item.name} retrieved from inventory and placed in rig's storage.")
+                    return
+            print(f"{item.name} not found in inventory.")
