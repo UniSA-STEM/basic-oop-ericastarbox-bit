@@ -231,3 +231,14 @@ class Hacker:
                     print(f"{item.name} retrieved from inventory and placed in rig's storage.")
                     return
             print(f"{item.name} not found in inventory.")
+
+    def scan_inventory(self, item: BaseAsset):
+        """ Scan inventory for specific assets.
+            If found, remove asset from inventory and return asset. """
+        for asset in self.inventory:
+            if item == asset:
+                self.inventory.remove(asset)
+                print(f"Removed asset {item.name} from inventory.")
+                return item
+        print(f"{item.name} not found in inventory.")
+        return None
