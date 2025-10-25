@@ -22,20 +22,25 @@ class BaseAsset:
 
 
 class CryptoToken(BaseAsset):
-    pass
+    def __init__(self):
+        super().__init__("CryptoToken", "Used to acquire or repair rigs.")
 
 
 class DataSpike(BaseAsset):
-    pass
+    def __init__(self):
+        super().__init__("DataSpike", "Used in battles to damage enemy rigs.")
 
 
 class RemovableDrive(BaseAsset):
-    pass
+    def __init__(self):
+        super().__init__("RemovableDrive", "Used to extract unsecured assets.")
 
 
 class SecurityChip(BaseAsset):
-    pass
+    def __init__(self):
+        super().__init__("SecurityChip", "Used to encrypt or decrypt assets.")
 
 
 class HardwarePatch(BaseAsset):
-    pass
+    def __init__(self):
+        super().__init__("HardwarePatch", "Used to upgrade rigs.")
