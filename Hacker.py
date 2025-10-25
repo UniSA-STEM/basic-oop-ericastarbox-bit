@@ -6,8 +6,7 @@ ID: 110468687
 Username: boxey001
 This is my own work as defined by the University's Academic Misconduct Policy.
 """
-from _ast import Tuple
-from typing import Optional
+from typing import Tuple, Optional
 from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset, HardwarePatch
 from Rig import Rig
 
@@ -21,16 +20,6 @@ class Hacker:
         self.chip_location = None
 
     # ---------- Helper Methods ----------
-
-    def find_and_remove_from_inventory(self, item_type):
-        """
-        Find and remove the first instance of the specified type in the Hacker's inventory.
-        """
-        for item in self.inventory:
-            if isinstance(item, item_type):
-                self.inventory.remove(item)
-                return item
-        return None
 
     def find_item_type(self, item_class: type) -> Optional[Tuple[BaseAsset, str]]:
         """
@@ -47,23 +36,23 @@ class Hacker:
                     return item, "rig"
         return None
 
-    def find_and_remove_from_rig(self, items: BaseAsset, source: Rig):
+    def remove_item(self, item: BaseAsset, location: list[BaseAsset]) -> BaseAsset | None:
         """
-        Find and remove the item from the target Rig.
+        Removes an unencrypted asset from the specified location (inventory or rig storage).
+        If successful, returns removed asset, otherwise returns None.
         """
 
-        if items in source.storage:
-            source.storage.remove(items)
-            return True
-        else:
-            print(f"{items} not found in {source.name} storage.")
-            return False
-
-    def remove_item(self, item: BaseAsset, location):
         for asset in location:
-            if item == asset and not item.encrypted:
+            if item == asset:
+                if item.encrypted:
+                    print(f"{item.name} can't be removed because it's encrypted.")
+                    return None
                 location.remove(asset)
                 print(f"{item.name} removed.")
+                return item
+
+        print(f"{item.name} not found.")
+        return None
 
     # ---------- Core Methods ----------
 
@@ -72,27 +61,46 @@ class Hacker:
         Remove a CryptoToken and assign a Rig.
         """
 
-        if self.find_and_remove_from_inventory(CryptoToken):  # Uses helper function to find and remove CryptoToken
-            self.rig = Rig("Hail Mary")
-            print("Rig acquired.")
-        else:
-            print("No CryptoToken available to acquire rig.")
+        # 1. Ensure CryptoToken is available.
+        token_found = self.find_item_type(CryptoToken)
+        if not token_found:
+            print(f"Must have CryptoToken to encrypt assets.")
+            return
+
+        # 2. Unpack the tuple returned from find_item_type()
+        #    'token' = the CryptoToken object
+        #    'token_location' = where object was found
+        token, token_location = token_found
+        token_source = self.inventory if token_location == "inventory" else self.rig.storage
+
+        # 3. Remove token from source location and acquire Rig
+        self.remove_item(token, token_source)
+
+        # 4. Acquire Rig
+        self.rig = Rig("Hail Mary")
+        print("Rig acquired for one CryptoToken.")
 
     def launch_data_spikes(self, target: Rig):
         """
         Launch a DataSpike at a target Rig.
         """
 
+        # 1. Check that target is an instance of Rig.
         if not isinstance(target, Rig):
             print("Target is not a rig")
             return
 
-        spike = self.find_and_remove_from_inventory(DataSpike)
-        if spike:
-            target.damage_counter += 1
-            print("DataSpike launched")
-        else:
-            print("No DataSpike available.")
+        # 2. Check that DataSpike is available
+        spike_found = self.find_item_type(DataSpike)
+        if not spike_found:
+            print(f"No DataSpike found")
+            return
+
+        # 3. Damage target and consume DataSpike
+        spike, spike_location = spike_found
+        self.remove_item(spike, self.inventory if spike_location == "inventory" else self.rig.storage)
+        target.damage_counter += 1
+        print("DataSpike launched.")
 
     def encrypt_assets(self, location):
         """
@@ -108,7 +116,6 @@ class Hacker:
             return
 
         chip, chip_location = chip_found
-        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
 
         # 2. Track encryption
         any_encrypted = False
@@ -135,11 +142,10 @@ class Hacker:
         # 1. Ensure that chip is available
         chip_found = self.find_item_type(SecurityChip)
         if not chip_found:
-            print(f"Must have security chip to dencrypt assets.")
+            print(f"Must have security chip to decrypt assets.")
             return
 
         chip, chip_location = chip_found
-        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
 
         # 2. Ensure target is a broken rig
         if not isinstance(target, Rig):
@@ -188,21 +194,27 @@ class Hacker:
         print(f"{self.rig.name} has been upgraded.")
 
     # Store assets from target rig.
-    def store_asset(self, items: BaseAsset, source: Rig, destination: list):
+    def store_asset(self, items: BaseAsset | list[BaseAsset], source: Rig, destination: list[BaseAsset]):
         """
         Move asset(s) from the source rig's storage to the hackers inventory or the hacker's rig's storage.
-        Asset(s) are turned to lists to allow for one or multiple assets to be moved at a time.
         destination (list): The target storage location can be either self.inventory or self.rig.storage.
         """
 
+        # 1. Turn items into list to allow for one or multiple assets to be moved at a time.
         if not isinstance(items, list):
             items = [items]
 
+        # 2. Ensure that the specified source is a Rig.
+        if not isinstance(source, Rig):
+            print("Source must be an instance of Rig.")
+            return
+
+        # 3. Remove items from source and move to destination.
         for item in items:
-            was_removed = self.find_and_remove_from_rig(item, source)
-            if was_removed:
+            removed_items = self.remove_item(item, source)
+            if removed_items:
                 destination.append(item)
-                print(f"{item.name} moved to {('inventory' if destination == self.inventory else 'rig storage')}.")
+                print(f"{removed_items} moved to {('inventory' if destination == self.inventory else 'rig storage')}.")
 
     def retrieve_assets(self, item: BaseAsset, to_inventory: bool = False):
         """
