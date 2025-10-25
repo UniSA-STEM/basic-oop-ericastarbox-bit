@@ -14,14 +14,14 @@ from Rig import Rig
 class Hacker:
     def __init__(self, name: str):
         self.name = name
-        self.inventory = [CryptoToken("CryptoToken", "Used to acquire rigs.")]
+        self.inventory = [CryptoToken()]
         self.rig = None
         self.trace_level = 0
         self.chip_location = None
 
     # ---------- Helper Methods ----------
 
-    def find_item_type(self, item_class: type) -> Optional[Tuple[type, str]]:
+    def find_item_type(self, item_class: type) -> Optional[Tuple[BaseAsset, str]]:
         """
         Search for an instance of item_class - a subclass of BaseAsset.
         First checks inventory and if not found, then rig.
@@ -36,7 +36,7 @@ class Hacker:
                     return item, "rig"
         return None
 
-    def remove_item(self, item: BaseAsset | type, location: list[BaseAsset] | Rig) -> BaseAsset | None:
+    def remove_item(self, item: BaseAsset, location: list) -> BaseAsset | None:
         """
         Removes an unencrypted asset from the specified location (inventory or rig storage).
         If successful, returns the removed asset, otherwise returns None.
@@ -64,7 +64,7 @@ class Hacker:
         # 1. Ensure CryptoToken is available.
         token_found = self.find_item_type(CryptoToken)
         if not token_found:
-            print(f"Must have CryptoToken to encrypt assets.")
+            print(f"Must have CryptoToken to acquire a rig.")
             return
 
         # 2. Unpack the tuple returned from find_item_type()
@@ -98,7 +98,8 @@ class Hacker:
 
         # 3. Damage target and consume DataSpike
         spike, spike_location = spike_found
-        self.remove_item(spike, self.inventory if spike_location == "inventory" else self.rig.storage)
+        spike_source = self.inventory if spike_location == "inventory" else self.rig.storage
+        self.remove_item(spike, spike_source)
         target.damage_counter += 1
         print("DataSpike launched.")
 
@@ -116,6 +117,7 @@ class Hacker:
             return
 
         chip, chip_location = chip_found
+        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
 
         # 2. Track encryption
         any_encrypted = False
@@ -130,7 +132,7 @@ class Hacker:
         # 4. Print results
         if any_encrypted:
             print(f"Assets in {location_str} have been encrypted.")
-            self.remove_item(chip, self.inventory if chip_location == "inventory" else self.rig.storage)
+            self.remove_item(chip, chip_source)
         else:
             print(f"Assets in {location_str} are already encrypted. SecurityChip not consumed.")
 
@@ -146,6 +148,7 @@ class Hacker:
             return
 
         chip, chip_location = chip_found
+        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
 
         # 2. Ensure the target is a broken rig
         if not isinstance(target, Rig):
@@ -165,7 +168,7 @@ class Hacker:
         # 4. Print results
         if decrypted_any:
             print("Target assets have been decrypted successfully.")
-            self.remove_item(chip, self.inventory if chip_location == "inventory" else self.rig.storage)
+            self.remove_item(chip, chip_source)
         else:
             print("Assets are already decrypted. SecurityChip not consumed.")
 
@@ -189,10 +192,10 @@ class Hacker:
         patch, location = hardware_patch_info
         if location == "inventory":
             self.inventory.remove(patch)
-            self.rig.upgrade_rig()
+            self.rig.rig_upgrade()
         else:
             self.rig.storage.remove(patch)
-            self.rig.upgrade_rig()
+            self.rig.rig_upgrade()
         print(f"{self.rig.name} has been upgraded.")
 
     def store_asset(self, items: BaseAsset | list[BaseAsset], source: Rig, destination):
@@ -212,9 +215,9 @@ class Hacker:
 
         # 3. Remove items from the source and move to destination.
         for item in items:
-            removed_items = self.remove_item(item, source)
+            removed_item = self.remove_item(item, source.storage)
 
-            if not removed_items:
+            if not removed_item:
                 print(f"No item named {item.name} found in source rig.")
                 continue
 
@@ -225,11 +228,13 @@ class Hacker:
 
                 if current_count >= max_capacity:
                     print(f"Rig storage is full. Cannot store more items.")
+                    # Return the item back to source
+                    source.storage.append(removed_item)
                     return
 
-            destination.append(item)
+            destination.append(removed_item)
             location_name = "inventory" if destination == self.inventory else "rig storage"
-            print(f"{item.name} moved to {location_name}.")
+            print(f"{removed_item.name} moved to {location_name}.")
 
     def retrieve_assets(self, item: BaseAsset, to_inventory: bool = False):
         """

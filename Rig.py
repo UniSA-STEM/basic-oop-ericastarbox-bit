@@ -6,8 +6,10 @@ ID: 110468687
 Username: boxey001
 This is my own work as defined by the University's Academic Misconduct Policy.
 """
-from Asset import DataSpike
-from Asset import RemovableDrive
+import random as rand
+import time
+
+from Asset import DataSpike, SecurityChip, CryptoToken, HardwarePatch, RemovableDrive
 
 
 class Rig:
@@ -15,10 +17,12 @@ class Rig:
         self.name = name
         self.damage_counter = 0
         self.broken_state = False
-        self.storage = [DataSpike("DataSpike", "Used to encrypt and decrypt assets."),
-                        DataSpike("DataSpike", "Used to encrypt and decrypt assets."),
-                        RemovableDrive("RemovableDrive", "Used in battles.")]
+        self.storage = [DataSpike(),
+                        DataSpike(),
+                        RemovableDrive()]
         self.upgrade_level = 0
+        self.last_generation_time = time.time()
+        self.generation_interval = 15
 
     # ---------- Helper Methods ----------
 
@@ -41,7 +45,7 @@ class Rig:
     def rig_repair(self):
         """
         Rig can be repaired using an upgrade level. When a rig is repaired, its damage_counter returns
-        to 0, and its broken_state returns true.
+        to 0, and its broken_state returns to False.
         Rig repairs cost one upgrade_level.
         """
 
@@ -68,12 +72,45 @@ class Rig:
 
     def rigs_condition(self):
         """
-        Displays the condition of the rig.
+        Returns the condition of the rig.
         """
 
         if self.broken_state:
             condition = "Broken"
         else:
             condition = "Pristine"
+        print(f"{condition} (Level {self.upgrade_level})")
 
-        return f"{condition} (Level {self.upgrade_level})"
+    def generate_assets(self):
+        """
+        Generates a random asset and adds it to this rig's storage,
+        respecting the storage capacity.
+        """
+
+        current_time = time.time()
+        time_elapsed = current_time - self.last_generation_time
+
+        # Check if enough time has passed for one asset
+        if time_elapsed >= self.generation_interval:
+            # Check storage capacity
+            if len(self.storage) >= self.max_storage_capacity():
+                print("Storage full. Cannot generate new assets.")
+                return
+
+            # Generate one random asset
+            asset_types = {
+                "CryptoToken": CryptoToken,
+                "DataSpike": DataSpike,
+                "RemovableDrive": RemovableDrive,
+                "SecurityChip": SecurityChip,
+                "HardwarePatch": HardwarePatch
+            }
+
+            random_key = rand.choice(list(asset_types.keys()))
+            asset_class = asset_types[random_key]
+            new_asset = asset_class()
+            self.storage.append(new_asset)
+            print(f"Background generation: {new_asset.name} added to storage.")
+
+            # Reset timer for next generation
+            self.last_generation_time = current_time
