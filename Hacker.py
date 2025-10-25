@@ -242,3 +242,12 @@ class Hacker:
                 return item
         print(f"{item.name} not found in inventory.")
         return None
+
+    def __str__(self):
+        return (
+            "---------------------\n"
+            f"Hacker Name: {self.name}\n"
+            f"{f'Rig Name: {self.rig.name}' if self.rig else 'Hacker has no rig.'}\n"
+            f"Trace Level: {self.trace_level}\n"
+            "---------------------\n"
+        )
