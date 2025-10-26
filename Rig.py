@@ -1,6 +1,6 @@
 """
 File: Rig.py
-Description: Defines the Rig class
+Description: Defines the Rig class and related methods required for the Basic Programming Assignment.
 Author: Erica Box
 ID: 110468687
 Username: boxey001
@@ -72,6 +72,14 @@ class Rig:
             self.broken_state = False
         return self.broken_state
 
+    def rig_storage(self):
+        """
+        Prints a clear string representation of the rig's storage.
+        """
+
+        storage_names = ", ".join([item.name for item in self.rig_storage()])
+        return storage_names
+
     # ---------- Core Methods ----------
 
     def rig_repair(self):
@@ -118,3 +126,19 @@ class Rig:
         Manually trigger asset generation check.
         """
         self._check_generation()
+
+    def __str__(self):
+        """
+        Returns a string representation of the rig, describing its condition and storage contents.
+        """
+
+        condition = "Broken" if self.broken_state else "Pristine"
+        storage_items = ", ".join([item.name for item in self.storage]) if self.storage else "(empty)"
+        return (
+            "=====================\n"
+            f"Rig Name: {self.name}\n"
+            f"Condition: {condition}\n"
+            f"Upgrade Level: {self.upgrade_level}\n"
+            f"Storage: {storage_items}\n"
+            "=====================\n"
+        )

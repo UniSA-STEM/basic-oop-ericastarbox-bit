@@ -57,7 +57,6 @@ class Hacker:
 
         # 3. Remove the item from the location and return it.
         location.remove(item)
-        print(f"{item.name} removed.")
         return item
 
     def adjust_trace_level(self, amount: int = 1):
@@ -89,6 +88,14 @@ class Hacker:
                 self.trace_level -= 1
                 print(f"Background recovery: trace level reduced to {self.trace_level}.")
                 self.trace_level_reduced_time = current_time
+
+    def inventory_items(self):
+        """
+        Prints a clear string representation of the hacker's inventory.
+        """
+
+        inventory_names = ", ".join([item.name for item in self.inventory])
+        return inventory_names
 
     # ---------- Core Methods ----------
 
@@ -259,15 +266,17 @@ class Hacker:
 
         # 4. Remove Hardware Patch
         patch, location = hardware_patch_info
-        if location == "inventory":
-            self.inventory.remove(patch)
-        else:
-            self.rig.storage.remove(patch)
+        patch_source = self.inventory if location == "inventory" else self.rig.storage
+        removed_patch = self.remove_item(patch, patch_source)
 
+        if not removed_patch:
+            return
+
+        # 5. Upgrade the rig
         self.rig.rig_upgrade()
         print(f"{self.rig.name} has been upgraded.")
 
-        # 5. Decrease trace level in the background
+        # 6. Decrease trace level in the background
         self.reduce_trace_level()
 
     def store_asset(self, items: BaseAsset | list[BaseAsset], source: Rig, destination):
@@ -392,5 +401,5 @@ class Hacker:
             f"Hacker Name: {self.name}\n"
             f"{f'Rig Name: {self.rig.name}' if self.rig else 'Hacker has no rig.'}\n"
             f"Trace Level: {self.trace_level}\n"
-            "=====================\n"
+            "====================="
         )
