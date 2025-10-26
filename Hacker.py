@@ -1,13 +1,15 @@
 """
 File: Hacker.py
-Description: Defines the Hacker class and related methods required for the Basic Programming Assignment.
+Description: Defines the Hacker class and related methods required for the
+            Basic Programming Assignment.
 Author: Erica Box
 ID: 110468687
 Username: boxey001
 This is my own work as defined by the University's Academic Misconduct Policy.
 """
 from typing import Tuple, Optional
-from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset, HardwarePatch
+from Asset import (CryptoToken, SecurityChip, DataSpike, BaseAsset,
+                   HardwarePatch)
 from Rig import Rig
 import time
 
@@ -17,14 +19,22 @@ class Hacker:
         self.name = name
         self.inventory = [CryptoToken()]
         self.rig = None
-        self.trace_level = 0
+        self._trace_level = 0
         self.chip_location = None
-        self.trace_level_reduced_time = time.time()
-        self.trace_level_reduced_interval = 15
+        self._trace_level_reduced_time = time.time()
+        self._trace_level_reduced_interval = 15
+
+    # ---------- Properties ----------
+
+    @property
+    def trace_level(self):
+        """Get current trace level."""
+        return self._trace_level
 
     # ---------- Helper Methods ----------
 
-    def find_item_type(self, item_class: type) -> Optional[Tuple[BaseAsset, str]]:
+    def find_item_type(self, item_class: type) \
+            -> Optional[Tuple[BaseAsset, str] | tuple[type, str]]:
         """
         Search for an instance of item_class - a subclass of BaseAsset.
         First checks inventory and if not found, then rig.
@@ -39,19 +49,20 @@ class Hacker:
                     return item, "rig"
         return None
 
-    def remove_item(self, item: BaseAsset, location: list) -> BaseAsset | None:
+    @staticmethod
+    def remove_item(item: BaseAsset, location: list) -> BaseAsset | None:
         """
-        Removes an unencrypted asset from the specified location (inventory or rig storage).
-        If successful, returns the removed asset, otherwise returns None.
+        Removes an unencrypted asset from the specified location (inventory
+        or rig storage). If successful, returns the removed asset, otherwise
+        returns None.
         """
-
         # 1. Check that the item is in the location.
         if item not in location:
             print(f"{item.name} not found.")
             return None
 
         # 2. Check that the item is not encrypted.
-        if item.encrypted:
+        if item._encrypted:
             print(f"{item.name} can't be removed because it's encrypted.")
             return None
 
@@ -64,8 +75,9 @@ class Hacker:
         Adjusts the trace level by a specified amount.
         """
 
-        self.trace_level += amount
-        print(f"\n!!! TRACE ALERT !!! Trace level increased to {self.trace_level} out of {self.trace_level_limit()}!\n")
+        self._trace_level += amount
+        print(f"\n!!! TRACE ALERT !!! Trace level increased to "
+              f"{self.trace_level} out of {self.trace_level_limit()}!\n")
 
     @staticmethod
     def trace_level_limit():
@@ -81,13 +93,14 @@ class Hacker:
         """
 
         current_time = time.time()
-        time_elapsed = current_time - self.trace_level_reduced_time
+        time_elapsed = current_time - self._trace_level_reduced_time
 
-        if time_elapsed >= self.trace_level_reduced_interval:
+        if time_elapsed >= self._trace_level_reduced_interval:
             if self.trace_level > 0:
-                self.trace_level -= 1
-                print(f"Background recovery: trace level reduced to {self.trace_level}.")
-                self.trace_level_reduced_time = current_time
+                self._trace_level -= 1
+                print(f"Background recovery: trace level reduced to "
+                      f"{self.trace_level}.")
+                self._trace_level_reduced_time = current_time
 
     def inventory_items(self):
         """
@@ -114,7 +127,8 @@ class Hacker:
         #    'token' = the CryptoToken object
         #    'token_location' = where the object was found
         token, token_location = token_found
-        token_source = self.inventory if token_location == "inventory" else self.rig.storage
+        token_source = self.inventory if token_location == "inventory" \
+            else self.rig.storage
 
         # 3. Remove token from the source location and acquire Rig
         self.remove_item(token, token_source)
@@ -129,10 +143,9 @@ class Hacker:
         """
         Launch a DataSpike at a target Rig.
         """
-
         # 1. Check that the hacker's trace level does not exceed the limit.
         if self.trace_level >= self.trace_level_limit():
-            print(f"Trace level limit reached. Cannot launch DataSpike.")
+            print("Trace level limit reached. Cannot launch DataSpike.")
             return
 
         # 2. Check that the target is an instance of Rig.
@@ -143,12 +156,13 @@ class Hacker:
         # 3. Check that DataSpike is available
         spike_found = self.find_item_type(DataSpike)
         if not spike_found:
-            print(f"No DataSpike found")
+            print("No DataSpike found")
             return
 
         # 4. Damage target, consume DataSpike, and increase trace level
         spike, spike_location = spike_found
-        spike_source = self.inventory if spike_location == "inventory" else self.rig.storage
+        spike_source = self.inventory if spike_location == "inventory" \
+            else self.rig.storage
         self.remove_item(spike, spike_source)
         target.damage_counter += 1
         self.adjust_trace_level(2)  # Increase the trace level by two
@@ -178,11 +192,13 @@ class Hacker:
             return
 
         chip, chip_location = chip_found
-        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
+        chip_source = self.inventory if chip_location == "inventory" \
+            else self.rig.storage
 
         # 3. Track encryption
         any_encrypted = False
-        location_str = "inventory" if location == self.inventory else "rig storage"
+        location_str = "inventory" if location == self.inventory \
+            else "rig storage"
 
         # 4. Encrypt all unencrypted assets
         for asset in location:
@@ -196,13 +212,14 @@ class Hacker:
             print(f"Assets in {location_str} have been encrypted.")
             self.remove_item(chip, chip_source)
         else:
-            print(f"Assets in {location_str} are already encrypted. SecurityChip not consumed.")
+            print(f"Assets in {location_str} are already encrypted. "
+                  f"SecurityChip not consumed.")
 
     def decrypt_assets(self, target: Rig):
         """
-        Decrypt assets in a target Rig if it is broken and a SecurityChip is available.
+        Decrypt assets in a target Rig if it is broken and a
+        SecurityChip is available.
         """
-
         # 1. Check that the hacker's trace level does not exceed the limit.
         if self.trace_level >= self.trace_level_limit():
             print(f"Trace level limit reached. Cannot decrypt assets.")
@@ -215,14 +232,16 @@ class Hacker:
             return
 
         chip, chip_location = chip_found
-        chip_source = self.inventory if chip_location == "inventory" else self.rig.storage
+        chip_source = self.inventory if chip_location == "inventory" \
+            else self.rig.storage
 
         # 3. Ensure the target is a broken rig
         if not isinstance(target, Rig):
             print("Target is not a valid Rig.")
             return
         if not target.broken_state:
-            print(f"Cannot decrypt {target.name}: target rig is not broken/exposed.")
+            print(f"Cannot decrypt {target.name}: target rig is not "
+                  f"broken/exposed.")
             return
 
         # 4. Track decryption and decrypt all encrypted assets
@@ -265,7 +284,8 @@ class Hacker:
 
         # 4. Remove Hardware Patch
         patch, location = hardware_patch_info
-        patch_source = self.inventory if location == "inventory" else self.rig.storage
+        patch_source = self.inventory if location == "inventory" else (
+            self.rig.storage)
         removed_patch = self.remove_item(patch, patch_source)
 
         if not removed_patch:
@@ -278,13 +298,17 @@ class Hacker:
         # 6. Decrease trace level in the background
         self.reduce_trace_level()
 
-    def store_asset(self, items: BaseAsset | list[BaseAsset], source: Rig, destination):
+    def store_asset(self, items: BaseAsset | list[BaseAsset],
+                    source: Rig, destination):
         """
-        Move asset(s) from the source rig's storage to the hacker's inventory or the hacker's rig's storage.
-        destination (list): The target storage location can be either self.inventory or self.rig.storage.
+        Move asset(s) from the source rig's storage to the hacker's
+        inventory or the hacker's rig's storage. destination (list):
+        The target storage location can be either self.inventory or
+        self.rig.storage.
         """
 
-        # 1. Turn items into a list to allow for one or multiple assets to be moved at a time.
+        # 1. Turn items into a list to allow for one or multiple assets
+        # to be moved at a time.
         if not isinstance(items, list):
             items = [items]
 
@@ -293,13 +317,15 @@ class Hacker:
             print("Source must be an instance of Rig.")
             return
 
-        # 3. Check if the source is a target rig (not the hacker's own rig) and if so, ensure it's broken
+        # 3. Check if the source is a target rig (not the hacker's own rig)
+        # and if so, ensure it's broken
         if source != self.rig and not source.broken_state:
             print(f"Rig is not broken. Cannot remove items from {source.name}.")
             return
 
         # 4. Validate destination
-        if destination != self.inventory and (not self.rig or destination != self.rig.storage):
+        if destination != self.inventory and (not self.rig or
+                                              destination != self.rig.storage):
             print("Invalid destination. Must be inventory or rig storage.")
             return
 
@@ -310,7 +336,8 @@ class Hacker:
             available_space = max_capacity - current_count
 
             if available_space < len(items):
-                print(f"Rig storage is full. Cannot store all items. Available space: {available_space}")
+                print(f"Rig storage is full. Cannot store all items. "
+                      f"Available space: {available_space}")
                 return
 
         # 6. Remove items from the source and move to destination.
@@ -321,7 +348,8 @@ class Hacker:
                 continue
 
             destination.append(removed_item)
-            location_name = "inventory" if destination == self.inventory else "rig storage"
+            location_name = "inventory" if destination == self.inventory \
+                else "rig storage"
             print(f"{removed_item.name} moved to {location_name}.")
 
         # 7. Decrease trace level in the background
@@ -330,8 +358,9 @@ class Hacker:
     def retrieve_assets(self, item: BaseAsset, to_inventory: bool = False):
         """
         Move assets between the hacker's inventory and rig's storage.
-        If to_inventory is True, assets are moved from storage to inventory.
-        If to_inventory is False, assets are moved from inventory to storage.
+        If to_inventory is True, assets are moved from storage to
+        inventory. If to_inventory is False, assets are moved from
+        inventory to storage.
         """
 
         # 1. Check that the hacker has a rig.
@@ -355,20 +384,21 @@ class Hacker:
                 return
 
         # 3. Find and move the item
-        location_from = "rig storage" if to_inventory else "inventory"
+        location_from = "rig storage" if not to_inventory else "inventory"
         location_to = "inventory" if to_inventory else "rig's storage"
 
         if item not in source:
             print(f"{item.name} not found in {location_from}.")
             return
 
-        if item.encrypted:
+        if item._encrypted:
             print(f"Cannot move encrypted asset.")
             return
 
         source.remove(item)
         destination.append(item)
-        print(f"{item.name} retrieved from {location_from} and placed in {location_to}.")
+        print(f"{item.name} retrieved from {location_from} and placed in "
+              f"{location_to}.")
 
         # 4. Decrease trace level in the background
         self.reduce_trace_level()

@@ -1,6 +1,7 @@
 """
 File: main.py
-Description: <A brief description of this Python module.>
+Description: Main.py defines all functions required to support gameplay as well as those functions required
+to test key elements of the assignment.
 Author: Erica Box
 ID: 110468687
 Username: boxey001
@@ -9,16 +10,16 @@ This is my own work as defined by the University's Academic Misconduct Policy.
 
 from Rig import Rig
 from Hacker import Hacker
-from Asset import CryptoToken, SecurityChip, DataSpike, BaseAsset, HardwarePatch, RemovableDrive
 
 
 # ---------- HELPER FUNCTIONS ----------
 
-def validate_numeric_input(prompt, valid_options, error_message="Invalid choice. Please try again."):
+def validate_numeric_input(
+        prompt, valid_options,
+        error_message="Invalid choice. Please try again."):
     """
     Helper function to validate numeric input from the player.
     """
-
     while True:
         user_input = input(prompt)
 
@@ -34,7 +35,8 @@ def validate_numeric_input(prompt, valid_options, error_message="Invalid choice.
         if choice in valid_options:
             return choice
         else:
-            print(f"{error_message} Valid options are: {', '.join(map(str, valid_options))}\n")
+            valid_opts = ', '.join(map(str, valid_options))
+            print(f"{error_message} Valid options are: {valid_opts}\n")
 
 
 # ---------- CORE FUNCTIONS ----------
@@ -45,16 +47,17 @@ def validate_numeric_input(prompt, valid_options, error_message="Invalid choice.
 def welcome_message():
     """
     Displays the welcome message for the INTO THE GRID game and provides
-    instructions for gameplay. This includes an overview of inventory items, in-game
-    mechanics, and the player's objectives. The message also explains how the trace
-    level impacts gameplay and provides the starting conditions for the game.
+    instructions for gameplay. This includes an overview of inventory items,
+    in-game mechanics, and the player's objectives. The message also explains
+    how the trace level impacts gameplay and provides the starting conditions
+    for the game.
     """
 
     print(f"\nWelcome to INTO THE GRID.")
     input("""
-    You are a hacker navigating the digital underworld in search of power, data,
-    and survival.  Your rig is your lifeline - upgrade it, protect it, and use it
-    to attack others on the Grid.
+    You are a hacker navigating the digital underworld in search of power,
+    data, and survival.  Your rig is your lifeline - upgrade it, protect it, 
+    and use it to attack others on the Grid.
 
     --- GAME OVERVIEW ---
     
@@ -64,20 +67,22 @@ def welcome_message():
        - SecurityChips: required to encrypt or decrypt assets
        - HardwarePatches: upgrade components for your rig
 
-    -  Your RIG has its own STORAGE (starts with 2 DataSpikes and 1 Removable Drive).
-       Encrypted assets cannot be stolen, moved, or used until decrypted.
+    -  Your RIG has its own STORAGE (starts with 2 DataSpikes and 1 
+       Removable Drive). Encrypted assets cannot be moved, or used
+       until decrypted.
 
-    -  TRACE LEVEL: increases with risky actions (attacking, encrypting, decrypting).
-       If it reaches 5, you're exposed and blocked from taking actions.
-       Trace decreases slowly over time as you lay low.
+    -  TRACE LEVEL: increases with risky actions (attacking, encrypting,
+       decrypting). If it reaches 5, you're exposed and blocked from taking
+       actions. Trace decreases slowly over time as you lay low.
 
-    -  OBJECTIVE: Build and defend your rig while breaking into others'.
+    -   OBJECTIVE: Build and defend your rig while breaking into others'.
        - Acquire a rig using a CryptoToken
        - Store and retrieve assets between inventory and rig storage
        - Encrypt assets to protect them; decrypt to use them again
        - Launch DataSpikes to damage enemy rigs
        - When a rig breaks, steal its unencrypted assets
-       - Upgrade your rig with HardwarePatches for better storage and durability
+       - Upgrade your rig with HardwarePatches for better storage and
+         durability
        - Manage your trace level to stay operational
 
        Press ENTER to begin.
@@ -90,7 +95,8 @@ def welcome_message():
 def new_player_setup():
     player_name = input("Please enter your hacker alias: ")
     player = Hacker(player_name)
-    print(f"\nOkay {player_name}, let's get started. Your stats are as follows:\n")
+    print(f"\nOkay {player_name}, let's get started. Your stats are as "
+          f"follows:\n")
     print(f"\n" + "=" * 40)
     print("PLAYER PROFILE")
     print(f"=" * 40)
@@ -99,8 +105,9 @@ def new_player_setup():
     print("Inventory:", player.inventory_items())
     print(f"=" * 40 + "\n")
     input(f"Press ENTER to acquire your rig and begin your journey.\n")
-    rig = player.acquire_rig()
-    print(f"\nYou have successfully purchased a rig. See your rig's stats below:\n{player.rig}")
+    player.acquire_rig()
+    print(f"\nYou have successfully purchased a rig. See your rig's stats "
+          f"below:\n{player.rig}")
     return player
 
 
@@ -133,7 +140,6 @@ def asset_management(player):
     )
 
     # 1. View inventory
-    to_inventory = player.inventory if choice == 3 else player.rig.storage
     if choice == 1:
         print(f"\nInventory: {player.inventory_items()}")
 
@@ -143,7 +149,9 @@ def asset_management(player):
     # 2. View rig storage
     elif choice == 2:
         if player.rig:
-            storage_items = ", ".join([item.name for item in player.rig.storage]) if player.rig.storage else "(empty)"
+            storage_items = ", ".join([item.name
+                                       for item in player.rig.storage]) \
+                if player.rig.storage else "(empty)"
             print(f"\nRig Storage: {storage_items}")
         else:
             print("\nYou don't have a rig yet.")
@@ -166,10 +174,11 @@ def asset_management(player):
         if source == 1:
             source_location = "inventory"
             source_address = player.inventory
-
+            to_inventory = False
         else:
             source_location = "rig storage"
             source_address = player.rig.storage
+            to_inventory = True
 
         item = input(f"""
         Which of the following items do you want to move from {source_location}:
@@ -178,11 +187,13 @@ def asset_management(player):
         """)
 
         # Find the item in the source location and move to the destination
-        item_to_move = next((asset for asset in source_address if asset.name == item), None)
-        if item_to_move:
-            player.retrieve_assets(item_to_move, to_inventory)
-        else:
-            print(f"Item '{item}' not found in {source_location}.")
+        for asset in source_address:
+            if item == asset.name:
+                item_to_move = asset
+                if item_to_move:
+                    player.retrieve_assets(item_to_move, to_inventory)
+            else:
+                print(f"Item '{item}' not found in {source_location}.")
 
         # Return to asset management menu
         asset_management(player)
@@ -354,4 +365,46 @@ def play_game():
     main_menu(player)
 
 
-play_game()
+play_game()  # Remove hash to run game.
+
+# ---------- TEST FUNCTIONS ----------
+"""
+These functions are purely for the purpose of testing specific 
+scenarios outlined in the project documentation.
+These functions are separate to the main gameplay loop.
+"""
+
+
+def upgrade_without_rig():
+    """
+    Test edge case: try to upgrade without a rig. This should fail.
+    """
+    player_name = input("Please enter your hacker alias: ")
+    player = Hacker(player_name)
+    player.upgrade_rig()
+
+
+# upgrade_without_rig()   #Remove hash to test function.
+
+def encrypt_without_security_chip():
+    """
+    Test edge case: try to encrypt without a security chip. This should fail.
+    """
+    player_name = input("Please enter your hacker alias: ")
+    player = Hacker(player_name)
+    player.encrypt_assets(player.inventory)
+
+
+# encrypt_without_security_chip()   #Remove hash to test function.
+
+def launch_attacks_with_high_trace():
+    """
+    Test edge case: try to launch attack with high trace level. This should fail.
+    """
+    player_name = input("Please enter your hacker alias: ")
+    player = Hacker(player_name)
+    player.__trace_level = 5
+    target = Rig("Newman")
+    player.launch_data_spikes(target)
+
+# launch_attacks_with_high_trace()   #Remove hash to test function.

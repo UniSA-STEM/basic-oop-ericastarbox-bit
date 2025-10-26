@@ -12,13 +12,11 @@ class BaseAsset:
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
-        self.encrypted = False
+        self._encrypted = False
 
     def __str__(self):
-        if self.encrypted:
-            return f'{self.name}: {self.description} [encrypted]'
-        else:
-            return f'{self.name}: {self.description}'
+        encryption_status = " [encrypted]" if self._encrypted else ""
+        return f'{self.name}: {self.description}{encryption_status}'
 
 
 class CryptoToken(BaseAsset):
@@ -44,3 +42,20 @@ class SecurityChip(BaseAsset):
 class HardwarePatch(BaseAsset):
     def __init__(self):
         super().__init__("HardwarePatch", "Used to upgrade rigs.")
+
+
+# ---------- Properties ----------
+@property
+def encrypted(self):
+    """
+    Get encryption status.
+    """
+    return self._encrypted
+
+
+@encrypted.setter
+def encrypted(self, value: bool):
+    """
+    Set encryption status.
+    """
+    self._encrypted = value
