@@ -14,9 +14,8 @@ from Hacker import Hacker
 
 # ---------- HELPER FUNCTIONS ----------
 
-def validate_numeric_input(
-        prompt, valid_options,
-        error_message="Invalid choice. Please try again."):
+def validate_numeric_input(prompt, valid_options,
+                           error_message="Invalid choice. Please try again."):
     """
     Helper function to validate numeric input from the player.
     """
