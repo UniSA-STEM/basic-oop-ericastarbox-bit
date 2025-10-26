@@ -30,15 +30,47 @@ class Rig:
         """
         Return how many hits the rig can take before breaking.
         """
-
+        self._check_generation()  # Auto-check whenever accessed
         return 2 + self.upgrade_level
 
     def max_storage_capacity(self) -> int:
         """
         Return how many items the rig can store.
         """
-
+        self._check_generation()  # Auto-check whenever accessed
         return 3 + (self.upgrade_level * 2)
+
+    def _check_generation(self):
+        """
+        Checks and generates assets in the background.
+        """
+        current_time = time.time()
+        time_elapsed = current_time - self.last_generation_time
+
+        if time_elapsed >= self.generation_interval:
+            if len(self.storage) < self.max_storage_capacity():
+                asset_types = {
+                    "CryptoToken": CryptoToken,
+                    "DataSpike": DataSpike,
+                    "RemovableDrive": RemovableDrive,
+                    "SecurityChip": SecurityChip,
+                    "HardwarePatch": HardwarePatch
+                }
+
+                random_key = rand.choice(list(asset_types.keys()))
+                asset_class = asset_types[random_key]
+                new_asset = asset_class()
+                self.storage.append(new_asset)
+                print(f"Background generation: {new_asset.name} added to storage.")
+                self.last_generation_time = current_time
+
+    def update_broken_state(self):
+        if self.damage_counter >= self.max_damage_capacity():
+            self.broken_state = True
+            print(f"Rig {self.name} is broken.")
+        else:
+            self.broken_state = False
+        return self.broken_state
 
     # ---------- Core Methods ----------
 
@@ -48,13 +80,12 @@ class Rig:
         to 0, and its broken_state returns to False.
         Rig repairs cost one upgrade_level.
         """
+        self._check_generation()  # Check for asset generation
 
-        # 1. Check that an upgrade level is available
         if self.upgrade_level == 0:
             print(f'Upgrade level is not available for rig repair.')
             return
 
-        # 2. Repair rig
         if self.damage_counter > 0:
             self.damage_counter = 0
             self.broken_state = False
@@ -67,13 +98,14 @@ class Rig:
         """
         Upgrades the Hacker's rig.
         """
-
+        self._check_generation()  # Check for asset generation
         self.upgrade_level += 1
 
     def rigs_condition(self):
         """
         Returns the condition of the rig.
         """
+        self._check_generation()  # Check for asset generation
 
         if self.broken_state:
             condition = "Broken"
@@ -83,34 +115,6 @@ class Rig:
 
     def generate_assets(self):
         """
-        Generates a random asset and adds it to this rig's storage,
-        respecting the storage capacity.
+        Manually trigger asset generation check.
         """
-
-        current_time = time.time()
-        time_elapsed = current_time - self.last_generation_time
-
-        # Check if enough time has passed for one asset
-        if time_elapsed >= self.generation_interval:
-            # Check storage capacity
-            if len(self.storage) >= self.max_storage_capacity():
-                print("Storage full. Cannot generate new assets.")
-                return
-
-            # Generate one random asset
-            asset_types = {
-                "CryptoToken": CryptoToken,
-                "DataSpike": DataSpike,
-                "RemovableDrive": RemovableDrive,
-                "SecurityChip": SecurityChip,
-                "HardwarePatch": HardwarePatch
-            }
-
-            random_key = rand.choice(list(asset_types.keys()))
-            asset_class = asset_types[random_key]
-            new_asset = asset_class()
-            self.storage.append(new_asset)
-            print(f"Background generation: {new_asset.name} added to storage.")
-
-            # Reset timer for next generation
-            self.last_generation_time = current_time
+        self._check_generation()
