@@ -42,7 +42,7 @@ class Rig:
     @property
     def broken_state(self):
         """Get broken state (read-only)."""
-        return self.broken_state
+        return self._broken_state
 
     @property
     def upgrade_level(self):
