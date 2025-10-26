@@ -39,9 +39,9 @@ def validate_numeric_input(prompt, valid_options, error_message="Invalid choice.
 
 # ---------- CORE FUNCTIONS ----------
 
-# ----------------------------
+# --------------------------
 # WELCOME MESSAGE AND SETUP
-# ----------------------------
+# --------------------------
 def welcome_message():
     """
     Displays the welcome message for the INTO THE GRID game and provides
@@ -52,6 +52,12 @@ def welcome_message():
 
     print(f"\nWelcome to INTO THE GRID.")
     input("""
+    You are a hacker navigating the digital underworld in search of power, data,
+    and survival.  Your rig is your lifeline - upgrade it, protect it, and use it
+    to attack others on the Grid.
+
+    --- GAME OVERVIEW ---
+    
     -  Your INVENTORY holds portable assets you carry:
        - CryptoTokens: currency to acquire or repair rigs
        - DataSpikes: offensive programs to damage target rigs
@@ -78,23 +84,29 @@ def welcome_message():
        """)
 
 
-# ----------------------------
+# -----------------
 # NEW PLAYER SETUP
-# ----------------------------
+# -----------------
 def new_player_setup():
     player_name = input("Please enter your hacker alias: ")
     player = Hacker(player_name)
-    print(f"\nOkay Neo, let's get started. Your stats are as follows:\n\n{player}")
-    print(f"Inventory: {player.inventory_items()}\n=====================\n")
+    print(f"\nOkay {player_name}, let's get started. Your stats are as follows:\n")
+    print(f"\n" + "=" * 40)
+    print("PLAYER PROFILE")
+    print(f"=" * 40)
+    print(player)
+    print(f"-" * 40)
+    print("Inventory:", player.inventory_items())
+    print(f"=" * 40 + "\n")
     input(f"Press ENTER to acquire your rig and begin your journey.\n")
     rig = player.acquire_rig()
-    print(f"\nYou have successfully purchased a rig. See your rig's stats below:\n\n{player.rig}\n")
+    print(f"\nYou have successfully purchased a rig. See your rig's stats below:\n{player.rig}")
     return player
 
 
-# ----------------------------
+# ----------------------
 # ASSET MANAGEMENT MENU
-# ----------------------------
+# ----------------------
 def asset_management(player):
     """
     Manages asset-related operations for a player, including inventory
@@ -117,12 +129,20 @@ def asset_management(player):
         "Invalid option."
     )
 
+    # View inventory
+    to_inventory = player.inventory if choice == 3 else player.rig.storage
     if choice == 1:
-        player.inventory_items()
+        print(f"Inventory: {player.inventory_items()}")
 
+    # View rig storage
     elif choice == 2:
-        player.rig_storage_items()
+        if player.rig:
+            storage_items = ", ".join([item.name for item in player.rig.storage]) if player.rig.storage else "(empty)"
+            print(f"Rig Storage: {storage_items}")
+        else:
+            print("You don't have a rig yet.")
 
+    # Move items between inventory and rig storage
     elif choice == 3:
         source = validate_numeric_input(
             """
@@ -137,19 +157,25 @@ def asset_management(player):
         if source == 1:
             source_location = "inventory"
             source_items = player.inventory.items
-            source_address = player.inventory
         else:
             source_location = "rig storage"
             source_items = player.rig.storage
-            source_address = player.rig.storage
 
         item = input(f"""
-        Which of the following items do you want to move from {source_location}: 
-        {source_items}
-        Enter item: """)
+        Which of the following items do you want to move from {source_location}:
+        {', '.join(item.name for item in source_items)}
+        Enter item name: 
+        """)
 
-        player.retrieve_assets(item, source_address)
+        # Find the item in the source location
+        item_to_move = next((asset for asset in source_items if asset.name == item), None)
 
+        if item_to_move:
+            player.retrieve_assets(item_to_move, to_inventory)
+        else:
+            print(f"Item '{item}' not found in {source_location}.")
+
+    # Encrypt assets
     elif choice == 4:
         encrypt_from = validate_numeric_input(
             """
@@ -168,6 +194,7 @@ def asset_management(player):
 
         player.encrypt_assets(source_address)
 
+    # Decrypt assets
     elif choice == 5:
         decrypt_from = validate_numeric_input(
             """
@@ -187,12 +214,122 @@ def asset_management(player):
         player.decrypt_assets(source_address)
 
 
-# ----------------------------
-# MAIN GAMEPLAY LOOP
-# ----------------------------
+# ------------
+# BATTLE MODE
+# ------------
+def battle_mode(player):
+    """
+    Triggers battle mode, interacting with the user and processing their input.
+    """
+
+    target = Rig("Newman")
+    print("\nAN ALERT: An enemy rig is approaching!\nSignature matches: NEWMAN.\n")
+
+    choice = validate_numeric_input(
+        "Do you want to engage?\n"
+        "1.) Yes\n"
+        "2.) No\n "
+        "Enter your choice (1-2): ",
+        [1, 2],
+        "Invalid option."
+    )
+
+    if choice == 1:
+        # Initial attack
+        player.launch_data_spikes(target)
+        target.target_damage()
+        print(target.__str__(True))
+
+        # Continue battle loop
+        while not target.broken_state:
+            # Ask if player wants to continue BEFORE next attack
+            continue_battle = validate_numeric_input(
+                "Do you want to continue the battle?\n"
+                "1.) Yes\n"
+                "2.) No\n "
+                "Enter your choice (1-2): ",,
+                [1, 2],
+                "Invalid option."
+            )
+
+            if continue_battle == 2:
+                print("Retreating from battle...")
+                main_menu(player)
+                return  # Exit the function
+
+            # If yes, launch another attack
+            player.launch_data_spikes(target)
+            target.target_damage()
+            print(target)
+
+        # Target is broken
+        if target.broken_state:
+            print(f">>> Rig {target.name} is BROKEN! <<<")
+            choice = validate_numeric_input(
+                "What do you want to do next?\n"
+                "1.) Take target's assets\n"
+                "2.) Abandon broken rig and return to main menu\n "
+                "Enter your choice (1-2): ",
+                [1, 2],
+                "Invalid option."
+            )
+            if choice == 1:
+                # Move assets from target's storage to player's inventory
+                for asset in target.storage[:]:  # Use slice to avoid modification during iteration
+                    if not asset.encrypted_state:
+                        target.storage.remove(asset)
+                        player.inventory.append(asset)
+                        print(f"Acquired {asset.name} from target's rig.")
+                print("Assets retrieved successfully!")
+                main_menu(player)
+            else:
+                print("Abandoning broken rig and returning to the main menu...")
+                main_menu(player)
+
+    else:
+        print("Okay, we'll stay put...")
+        main_menu(player)
+
+
+# -----------
+# MAIN MENU
+# -----------
+def main_menu(player):
+    print("""
+    Please select from the following options to continue: 
+    
+    ========================================
+    MAIN MENU
+    ========================================
+    1.) Asset Management
+    2.) Upgrade Rig
+    3.) Battle Mode
+    ========================================
+    """)
+
+    choice = validate_numeric_input(
+        "Enter your choice (1–3): ",
+        [1, 2, 3],
+        "Invalid option."
+    )
+
+    if choice == 1:
+        asset_management(player)
+
+    elif choice == 2:
+        player.upgrade_rig()
+
+    else:
+        battle_mode(player)
+
+
+# ---------------
+# GAMEPLAY LOOP
+# ---------------
 def play_game():
     welcome_message()
     player = new_player_setup()
-    print("Please select from the following options to continue")
+    main_menu(player)
 
-# asset_management(player)
+
+play_game()

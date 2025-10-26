@@ -65,7 +65,7 @@ class Hacker:
         """
 
         self.trace_level += amount
-        print(f"Trace level increased to {self.trace_level}.")
+        print(f"\n!!! TRACE ALERT !!! Trace level increased to {self.trace_level} out of {self.trace_level_limit()}!\n")
 
     @staticmethod
     def trace_level_limit():
@@ -121,7 +121,6 @@ class Hacker:
 
         # 4. Acquire Rig
         self.rig = Rig("Hail Mary")
-        print("Rig acquired for one CryptoToken.")
 
         # 5. Decrease trace level in the background
         self.reduce_trace_level()
@@ -397,9 +396,7 @@ class Hacker:
         self.reduce_trace_level()
 
         return (
-            "=====================\n"
             f"Hacker Name: {self.name}\n"
-            f"{f'Rig Name: {self.rig.name}' if self.rig else 'Hacker has no rig.'}\n"
-            f"Trace Level: {self.trace_level}\n"
-            "====================="
+            f"Rig Name: {self.rig.name if self.rig else 'Hacker has no rig.'}\n"
+            f"Trace Level: {self.trace_level}"
         )

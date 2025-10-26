@@ -30,6 +30,7 @@ class Rig:
         """
         Return how many hits the rig can take before breaking.
         """
+
         self._check_generation()  # Auto-check whenever accessed
         return 2 + self.upgrade_level
 
@@ -37,13 +38,14 @@ class Rig:
         """
         Return how many items the rig can store.
         """
-        self._check_generation()  # Auto-check whenever accessed
+
         return 3 + (self.upgrade_level * 2)
 
     def _check_generation(self):
         """
         Checks and generates assets in the background.
         """
+
         current_time = time.time()
         time_elapsed = current_time - self.last_generation_time
 
@@ -79,6 +81,13 @@ class Rig:
 
         storage_names = ", ".join([item.name for item in self.rig_storage()])
         return storage_names
+
+    def target_damage(self):
+        """
+        Returns details of damage target has taken.
+        """
+        print(
+            f"Target has received {self.damage_counter} points of damage, out of a maximum of {self.max_damage_capacity()}.")
 
     # ---------- Core Methods ----------
 
@@ -127,18 +136,22 @@ class Rig:
         """
         self._check_generation()
 
-    def __str__(self):
+    def __str__(self, is_target=False):
         """
         Returns a string representation of the rig, describing its condition and storage contents.
         """
 
         condition = "Broken" if self.broken_state else "Pristine"
         storage_items = ", ".join([item.name for item in self.storage]) if self.storage else "(empty)"
+        title = "TARGET RIG STATUS" if is_target else "RIG STATUS"
+
         return (
-            "=====================\n"
-            f"Rig Name: {self.name}\n"
-            f"Condition: {condition}\n"
-            f"Upgrade Level: {self.upgrade_level}\n"
-            f"Storage: {storage_items}\n"
-            "=====================\n"
+                f"\n" + "=" * 40 + "\n"
+                                   f"{title}\n"
+                                   f"" + "=" * 40 + "\n"
+                                                    f"Rig Name: {self.name}\n"
+                                                    f"Condition: {condition}\n"
+                                                    f"Upgrade Level: {self.upgrade_level}\n"
+                                                    f"Storage: {storage_items}\n"
+                                                    f"" + "=" * 40
         )
