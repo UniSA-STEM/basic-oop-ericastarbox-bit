@@ -107,7 +107,7 @@ class Hacker:
         # 1. Ensure CryptoToken is available.
         token_found = self.find_item_type(CryptoToken)
         if not token_found:
-            print(f"Must have CryptoToken to acquire a rig.")
+            print(f"\nMust have CryptoToken to acquire a rig.")
             return
 
         # 2. Unpack the tuple returned from find_item_type()
@@ -174,7 +174,7 @@ class Hacker:
         # 2. Ensure that the chip is available.
         chip_found = self.find_item_type(SecurityChip)
         if not chip_found:
-            print(f"Must have security chip to encrypt assets.")
+            print(f"\nMust have security chip to encrypt assets.")
             return
 
         chip, chip_location = chip_found
@@ -211,7 +211,7 @@ class Hacker:
         # 2. Ensure that chip is available
         chip_found = self.find_item_type(SecurityChip)
         if not chip_found:
-            print(f"Must have security chip to decrypt assets.")
+            print(f"\nMust have security chip to decrypt assets.")
             return
 
         chip, chip_location = chip_found
@@ -260,7 +260,7 @@ class Hacker:
         # 3. Search for Hardware Patch
         hardware_patch_info = self.find_item_type(HardwarePatch)
         if not hardware_patch_info:
-            print("Hardware Patch needed to upgrade rig.")
+            print("\nHardware Patch needed to upgrade rig.")
             return
 
         # 4. Remove Hardware Patch

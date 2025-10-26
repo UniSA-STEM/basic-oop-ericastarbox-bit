@@ -114,75 +114,87 @@ def asset_management(player):
     """
 
     print("""
-        ASSET MANAGEMENT
-        ----------------
+    ========================================
+    ASSET MANAGEMENT
+    ========================================
         1.) View inventory
         2.) View rig storage
         3.) Move items between inventory and rig storage
         4.) Encrypt assets
         5.) Decrypt assets
-        """)
+        6.) Return to main menu
+    ========================================
+    """)
 
     choice = validate_numeric_input(
-        "Enter your choice (1–5): ",
-        [1, 2, 3, 4, 5],
+        "Enter your choice (1–6): ",
+        [1, 2, 3, 4, 5, 6],
         "Invalid option."
     )
 
-    # View inventory
+    # 1. View inventory
     to_inventory = player.inventory if choice == 3 else player.rig.storage
     if choice == 1:
-        print(f"Inventory: {player.inventory_items()}")
+        print(f"\nInventory: {player.inventory_items()}")
 
-    # View rig storage
+        # Return to asset management menu
+        asset_management(player)
+
+    # 2. View rig storage
     elif choice == 2:
         if player.rig:
             storage_items = ", ".join([item.name for item in player.rig.storage]) if player.rig.storage else "(empty)"
-            print(f"Rig Storage: {storage_items}")
+            print(f"\nRig Storage: {storage_items}")
         else:
-            print("You don't have a rig yet.")
+            print("\nYou don't have a rig yet.")
 
-    # Move items between inventory and rig storage
+        # Return to asset management menu
+        asset_management(player)
+
+    # 3. Move items between inventory and rig storage
     elif choice == 3:
         source = validate_numeric_input(
             """
-        Where do you want to move the item from:
-        1.) Inventory
-        2.) Rig's storage
-        Enter choice: """,
+            Where do you want to move the item from:
+            1.) Inventory
+            2.) Rig's storage
+            Enter choice (1-2): """,
             [1, 2],
             "Invalid source location."
         )
 
         if source == 1:
             source_location = "inventory"
-            source_items = player.inventory.items
+            source_address = player.inventory
+
         else:
             source_location = "rig storage"
-            source_items = player.rig.storage
+            source_address = player.rig.storage
 
         item = input(f"""
         Which of the following items do you want to move from {source_location}:
-        {', '.join(item.name for item in source_items)}
+        {', '.join(item.name for item in source_address)}
         Enter item name: 
         """)
 
-        # Find the item in the source location
-        item_to_move = next((asset for asset in source_items if asset.name == item), None)
-
+        # Find the item in the source location and move to the destination
+        item_to_move = next((asset for asset in source_address if asset.name == item), None)
         if item_to_move:
             player.retrieve_assets(item_to_move, to_inventory)
         else:
             print(f"Item '{item}' not found in {source_location}.")
 
-    # Encrypt assets
+        # Return to asset management menu
+        asset_management(player)
+
+    # 4. Encrypt assets
     elif choice == 4:
         encrypt_from = validate_numeric_input(
             """
         Where do you want to encrypt assets from:
         1.) Inventory
         2.) Rig's storage
-        Enter choice: """,
+        Enter choice (1-2): """,
             [1, 2],
             "Invalid location."
         )
@@ -194,14 +206,17 @@ def asset_management(player):
 
         player.encrypt_assets(source_address)
 
-    # Decrypt assets
+        # Return to asset management menu
+        asset_management(player)
+
+    # 5. Decrypt assets
     elif choice == 5:
         decrypt_from = validate_numeric_input(
             """
         Where do you want to decrypt assets from:
         1.) Inventory
         2.) Rig's storage
-        Enter choice: """,
+        Enter choice (1-2): """,
             [1, 2],
             "Invalid location."
         )
@@ -213,6 +228,13 @@ def asset_management(player):
 
         player.decrypt_assets(source_address)
 
+        # Return to asset management menu
+        asset_management(player)
+
+    # 6. Return to main menu
+    else:
+        main_menu(player)
+
 
 # ------------
 # BATTLE MODE
@@ -221,14 +243,14 @@ def battle_mode(player):
     """
     Triggers battle mode, interacting with the user and processing their input.
     """
-
+    acquired_assets = []
     target = Rig("Newman")
     print("\nAN ALERT: An enemy rig is approaching!\nSignature matches: NEWMAN.\n")
 
     choice = validate_numeric_input(
         "Do you want to engage?\n"
         "1.) Yes\n"
-        "2.) No\n "
+        "2.) No\n"
         "Enter your choice (1-2): ",
         [1, 2],
         "Invalid option."
@@ -246,8 +268,8 @@ def battle_mode(player):
             continue_battle = validate_numeric_input(
                 "Do you want to continue the battle?\n"
                 "1.) Yes\n"
-                "2.) No\n "
-                "Enter your choice (1-2): ",,
+                "2.) No\n"
+                "Enter your choice (1-2): ",
                 [1, 2],
                 "Invalid option."
             )
@@ -260,15 +282,15 @@ def battle_mode(player):
             # If yes, launch another attack
             player.launch_data_spikes(target)
             target.target_damage()
-            print(target)
+            print(target.__str__(True))
 
         # Target is broken
         if target.broken_state:
-            print(f">>> Rig {target.name} is BROKEN! <<<")
+            print(f">>> Rig {target.name} is BROKEN! <<<\n")
             choice = validate_numeric_input(
                 "What do you want to do next?\n"
                 "1.) Take target's assets\n"
-                "2.) Abandon broken rig and return to main menu\n "
+                "2.) Abandon broken rig and return to main menu\n"
                 "Enter your choice (1-2): ",
                 [1, 2],
                 "Invalid option."
@@ -276,18 +298,17 @@ def battle_mode(player):
             if choice == 1:
                 # Move assets from target's storage to player's inventory
                 for asset in target.storage[:]:  # Use slice to avoid modification during iteration
-                    if not asset.encrypted_state:
-                        target.storage.remove(asset)
-                        player.inventory.append(asset)
-                        print(f"Acquired {asset.name} from target's rig.")
-                print("Assets retrieved successfully!")
+                    target.storage.remove(asset)
+                    player.inventory.append(asset)
+                    acquired_assets.append(asset.name)
+                print(f"\nAcquired {acquired_assets} from target's rig.")
                 main_menu(player)
             else:
                 print("Abandoning broken rig and returning to the main menu...")
                 main_menu(player)
 
     else:
-        print("Okay, we'll stay put...")
+        print("\nOkay, we'll stay put...")
         main_menu(player)
 
 
@@ -318,6 +339,7 @@ def main_menu(player):
 
     elif choice == 2:
         player.upgrade_rig()
+        main_menu(player)
 
     else:
         battle_mode(player)

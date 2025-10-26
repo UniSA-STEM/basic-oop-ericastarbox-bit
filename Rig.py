@@ -153,5 +153,5 @@ class Rig:
                                                     f"Condition: {condition}\n"
                                                     f"Upgrade Level: {self.upgrade_level}\n"
                                                     f"Storage: {storage_items}\n"
-                                                    f"" + "=" * 40
+                                                    f"" + "=" * 40 + "\n"
         )
